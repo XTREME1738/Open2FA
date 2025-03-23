@@ -1,4 +1,4 @@
-<a href="https://www.buymeacoffee.com/xtremedev"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=☕&slug=xtremedev&button_colour=BD5FFF&font_colour=ffffff&font_family=Cookie&outline_colour=000000&coffee_colour=FFDD00" /></a>
+[![BuyMeACoffee](https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=xtremedev&button_colour=BD5FFF&font_colour=ffffff&font_family=Cookie&outline_colour=000000&coffee_colour=FFDD00)](https://www.buymeacoffee.com/xtremedev)
 
 > [!WARNING]
 > This app is in very early development, you can use it, however please be warned that there could be bugs, and data loss, please make sure to backup your data, and use at your own risk.
