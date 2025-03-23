@@ -80,28 +80,28 @@ This is an example of the JSON format:
     {
       "label": "user@example.com",
       "issuer": "Example",
-	  "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
+      "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
       "algorithm": "SHA1",
       "type": "totp",
       "digits": 6,
       "interval": 30,
-	  "google": true,
-	  "categories": [],
-	  "updated_at": "2022-01-01T00:00:00.000Z",
-	  "created_at": "2022-01-01T00:00:00.000Z"
+      "google": true,
+      "categories": [],
+      "updated_at": "2022-01-01T00:00:00.000Z",
+      "created_at": "2022-01-01T00:00:00.000Z"
     },
     {
       "label": "user2@example.com",
       "issuer": "Example",
-	  "secret": "JBSWY3DPEHPK3PXP",
+      "secret": "JBSWY3DPEHPK3PXP",
       "algorithm": "SHA512",
       "type": "hotp",
       "digits": 8,
       "counter": 1,
-	  "google": true,
+      "google": true,
       "categories": ["Example"],
-	  "updated_at": "2022-01-01T00:00:00.000Z",
-	  "created_at": "2022-01-01T00:00:00.000Z"
+      "updated_at": "2022-01-01T00:00:00.000Z",
+      "created_at": "2022-01-01T00:00:00.000Z"
     }
   ]
 }
