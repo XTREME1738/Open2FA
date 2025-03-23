@@ -8,6 +8,7 @@
 
 > [!NOTE]
 > Open2FA is currently only available in English, please consider helping translate Open2FA into your language, see the [Translations](#translations) section for more information.
+>
 > Also, I am looking for an icon for Open2FA, if you have an icon submission, please make an issue with the icon, and I will take a look at it.
 
 # Open2FA
@@ -60,7 +61,8 @@ For languages that have multiple dialects, please use the language code, and the
 
 > [!NOTE]
 > Please make sure that any changes you make work on all platforms, and do not break anything, if you are unsure, please ask before making a PR.
-> Also, please make sure that your code is formatted using LF line endings, and that you have run `dart format ./lib/**/*.dart` before making a PR.
+>
+> Also, ensure that your code is formatted using LF line endings, and that you have run `dart format ./lib/**/*.dart` before making a PR.
 
 If you would like to contribute to Open2FA via code, you can fork the repo, make your changes, and make a PR to the dev branch.
 Before opening a PR, please make sure you understand that your code will be licensed under the GPL-3.0 License, and that you are okay with that.
