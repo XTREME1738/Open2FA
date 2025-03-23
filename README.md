@@ -7,7 +7,7 @@
 > If you are using Android, and your device has been rooted, it is advised against storing any sensitive information on the device, including 2FA secrets, we cannot protect against in-memory attacks, or rogue Xposed modules, or anything else like that.
 
 > [!NOTE]
-> Open2FA is currently only available in English, please consider helping translate Open2FA into your language, see the [Translations](#Translations) section for more information.
+> Open2FA is currently only available in English, please consider helping translate Open2FA into your language, see the [Translations](#translations) section for more information.
 > Also, I am looking for an icon for Open2FA, if you have an icon submission, please make an issue with the icon, and I will take a look at it.
 
 # Open2FA
@@ -68,7 +68,7 @@ Before opening a PR, please make sure you understand that your code will be lice
 ## Export Format
 
 There are 2 available formats for exporting your data, JSON, Encrypted JSON.
-The encrypted JSON format uses XChaCha20-Poly1305, using the Argon2id KDF, with the same parameters as described in [Security](#Security).
+The encrypted JSON format uses XChaCha20-Poly1305, using the Argon2id KDF, with the same parameters as described in [Security](#security).
 This is an example of the JSON format:
 
 ```json
