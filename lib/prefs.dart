@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:no_screenshot/no_screenshot.dart';
+import 'package:open2fa/i18n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Prefs {
@@ -48,6 +49,7 @@ class Prefs {
     final prefs = SharedPreferencesAsync();
     await prefs.setString('language', value);
     language = value;
+    I18n.load(value);
   }
 
   static Future setTheme(ThemeMode value) async {

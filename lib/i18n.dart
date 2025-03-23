@@ -8,7 +8,7 @@ final t = I18n.get;
 class I18n {
   static final Map<String, String> _i18n = {};
   static final Map<String, String> languages = {};
-  static String currentLanguage = 'en';
+  static String currentLanguage = 'en_gb';
 
   static String get(String key, {List<dynamic> args = const []}) {
     if (_i18n.containsKey(key)) {

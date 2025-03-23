@@ -54,6 +54,7 @@ class _Open2FAState extends ConsumerState<Open2FA> {
       await Prefs.init();
       final themeMode = Prefs.themeMode;
       final useDynamicColour = Prefs.useDynamicColour;
+      I18n.load(Prefs.language);
       ref.read(themeModeProvider.notifier).state = themeMode;
       ref.read(themeUseDynamicProvider.notifier).state = useDynamicColour;
       ref.read(useFlagSecureProvider.notifier).state =
