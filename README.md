@@ -109,7 +109,7 @@ This is an example of the JSON format:
 
 This is what the encrypted JSON format looks like:
 
-```json
+```jsonc
 {
   "encrypted": true,
   "passwordHash": "{encoded hash}", // $argon2id$v={version}$m={memory},t={iterations},p={parallelism}${base64 encoded salt}${base64 encoded hash}
