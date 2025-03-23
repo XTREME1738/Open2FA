@@ -57,6 +57,8 @@ If you would like to help translate Open2FA, you can do so by making a PR with t
 All translations are stored under the `i18n/` directory, and are in the format of `languageCode.json`, for example, `en.json`, `de.json`, `fr.json`, etc.
 For languages that have multiple dialects, please use the language code, and the dialect code, for example, `en_us.json`.
 
+Make sure to update the manifest.json if you are adding a new language.
+
 ## Contributing
 
 > [!NOTE]
