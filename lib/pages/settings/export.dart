@@ -31,7 +31,10 @@ class SettingsExportSheet extends ConsumerWidget {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const SettingsEncryptedExportPage(),
+                  builder:
+                      (context) => const SettingsEncryptedExportPage(
+                        encryptedExport: true,
+                      ),
                 ),
               );
             },

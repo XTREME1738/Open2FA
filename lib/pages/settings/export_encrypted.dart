@@ -6,7 +6,11 @@ import 'package:open2fa/main.dart';
 import 'package:open2fa/structures/export.dart';
 
 class SettingsEncryptedExportPage extends ConsumerStatefulWidget {
-  const SettingsEncryptedExportPage({super.key});
+  final bool encryptedExport;
+  const SettingsEncryptedExportPage({
+    super.key,
+    this.encryptedExport = false
+  });
 
   @override
   ConsumerState<SettingsEncryptedExportPage> createState() =>
@@ -24,7 +28,7 @@ class _SettingsEncryptedExportPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(t('settings.export_encrypted'))),
+      appBar: AppBar(title: Text(widget.encryptedExport ? t('settings.export_encrypted') : t('settings.import_encrypted'))),
       body: Container(
         padding: const EdgeInsets.all(16),
         child: Center(
@@ -35,6 +39,11 @@ class _SettingsEncryptedExportPageState
                 key: _formKey,
                 child: Column(
                   children: [
+                    Text(
+                      widget.encryptedExport ? t('settings.export_password_desc') : t('settings.import_password_desc'),
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: _passwordController,
                       decoration: InputDecoration(
@@ -58,62 +67,68 @@ class _SettingsEncryptedExportPageState
                         if (value == null || value.isEmpty) {
                           return t('error.password_required');
                         }
-                        if (value.length < 8) {
-                          return t('error.password_min');
-                        }
-                        if (value.length > 128) {
-                          return t('error.password_max');
-                        }
-                        if (!value.contains(RegExp(r'[A-Z]'))) {
-                          return t('error.password_requires_upper');
-                        }
-                        if (!value.contains(RegExp(r'[a-z]'))) {
-                          return t('error.password_requires_lower');
-                        }
-                        if (!value.contains(RegExp(r'[0-9]'))) {
-                          return t('error.password_requires_number');
-                        }
-                        if (!value.contains(RegExp(r'[!@#$%^&*()_+{}|:<>?]'))) {
-                          return t('error.password_requires_special');
-                        }
-                        if (value != _confirmPasswordController.text) {
-                          return t('error.password_no_match');
+                        if (widget.encryptedExport) {
+                          if (value.length < 8) {
+                            return t('error.password_min');
+                          }
+                          if (value.length > 128) {
+                            return t('error.password_max');
+                          }
+                          if (!value.contains(RegExp(r'[A-Z]'))) {
+                            return t('error.password_requires_upper');
+                          }
+                          if (!value.contains(RegExp(r'[a-z]'))) {
+                            return t('error.password_requires_lower');
+                          }
+                          if (!value.contains(RegExp(r'[0-9]'))) {
+                            return t('error.password_requires_number');
+                          }
+                          if (!value.contains(
+                            RegExp(r'[!@#$%^&*()_+{}|:<>?]'),
+                          )) {
+                            return t('error.password_requires_special');
+                          }
+                          if (value != _confirmPasswordController.text) {
+                            return t('error.password_no_match');
+                          }
                         }
                         return null;
                       },
                       obscureText: !_showPassword,
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    if (widget.encryptedExport) ...[
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          labelText: t('settings.export_password_confirm'),
+                          suffixIcon: IconButton(
+                            icon:
+                                _showConfirmPassword
+                                    ? Icon(Icons.visibility)
+                                    : Icon(Icons.visibility_off),
+                            onPressed: () {
+                              setState(() {
+                                _showConfirmPassword = !_showConfirmPassword;
+                              });
+                            },
+                          ),
                         ),
-                        labelText: t('settings.export_password_confirm'),
-                        suffixIcon: IconButton(
-                          icon:
-                              _showConfirmPassword
-                                  ? Icon(Icons.visibility)
-                                  : Icon(Icons.visibility_off),
-                          onPressed: () {
-                            setState(() {
-                              _showConfirmPassword = !_showConfirmPassword;
-                            });
-                          },
-                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return t('error.password_required');
+                          }
+                          if (value != _passwordController.text) {
+                            return t('error.password_no_match');
+                          }
+                          return null;
+                        },
+                        obscureText: !_showConfirmPassword,
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return t('error.password_required');
-                        }
-                        if (value != _passwordController.text) {
-                          return t('error.password_no_match');
-                        }
-                        return null;
-                      },
-                      obscureText: !_showConfirmPassword,
-                    ),
+                    ],
                     const SizedBox(height: 16),
                     TextButton(
                       style: ButtonStyle(
@@ -127,39 +142,46 @@ class _SettingsEncryptedExportPageState
                         if (!_formKey.currentState!.validate()) {
                           return;
                         }
-                        try {
-                          final export = await EncryptedExport.generate(
-                            _passwordController.text,
-                          );
-                          String?
-                          outputFile = await FilePicker.platform.saveFile(
-                            allowedExtensions: ['json'],
-                            type: FileType.custom,
-                            fileName:
-                                '${t('app_title')}_${DateTime.now().toIso8601String()}.json',
-                            initialDirectory: '/storage/emulated/0',
-                            bytes: export.toJsonBytes(),
-                          );
-                          if (mounted && outputFile != null) {
-                            // ignore: use_build_context_synchronously
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(t('settings.export_success')),
-                              ),
+                        if (widget.encryptedExport) {
+                          try {
+                            final export = await EncryptedExport.generate(
+                              _passwordController.text,
                             );
-                            Navigator.of(context).pop();
+                            String?
+                            outputFile = await FilePicker.platform.saveFile(
+                              allowedExtensions: ['json'],
+                              type: FileType.custom,
+                              fileName:
+                                  '${t('app_title')}_${DateTime.now().toIso8601String()}.json',
+                              initialDirectory: '/storage/emulated/0',
+                              bytes: export.toJsonBytes(),
+                            );
+                            if (mounted && outputFile != null) {
+                              // ignore: use_build_context_synchronously
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(t('settings.export_success')),
+                                ),
+                              );
+                              // ignore: use_build_context_synchronously
+                              Navigator.of(context).pop();
+                            }
+                          } catch (e) {
+                            logger.e(t('error.export_fail'), error: e);
+                            if (mounted) {
+                              // ignore: use_build_context_synchronously
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(t('error.export_fail'))),
+                              );
+                            }
                           }
-                        } catch (e) {
-                          logger.e(t('error.export_fail'), error: e);
+                        } else {
                           if (mounted) {
-                            // ignore: use_build_context_synchronously
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(t('error.export_fail'))),
-                            );
+                            Navigator.of(context).pop(_passwordController.text);
                           }
                         }
                       },
-                      child: Text(t('settings.export_encrypted_finish')),
+                      child: Text(widget.encryptedExport ? t('settings.export_encrypted_finish') : t('settings.import_encrypted_start')),
                     ),
                   ],
                 ),

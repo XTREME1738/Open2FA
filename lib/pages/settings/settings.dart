@@ -4,6 +4,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:open2fa/crypto.dart';
 import 'package:open2fa/i18n.dart';
 import 'package:open2fa/main.dart';
+import 'package:open2fa/pages/settings/about/about.dart';
 import 'package:open2fa/pages/settings/export.dart';
 import 'package:open2fa/pages/settings/import.dart';
 import 'package:open2fa/pages/vault.dart';
@@ -235,6 +236,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 });
               },
             ),
+            Divider(),
+            ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              title: Text(t('settings.about')),
+              subtitle: Text(t('settings.about_desc')),
+              trailing: Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => SettingsAboutPage(),
+                  ),
+                );
+              },
+            )
           ],
         ),
       ),

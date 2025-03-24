@@ -252,31 +252,97 @@ class Crypto {
     }
   }
 
-  static Future<bool> comparePassword(String password) async {
+  static Future<bool> comparePassword(
+    String password, {
+    String? hashToCompare,
+    KdfAlgorithm? algorithm,
+    String? salt,
+  }) async {
     final storage = FlutterSecureStorage();
-    final storedHash = await storage.read(key: 'password_hash');
-    if (storedHash == null) {
+    hashToCompare ??= await storage.read(key: 'password_hash');
+    algorithm ??= _algorithm;
+    salt ??= await getHashingSalt();
+    if (hashToCompare == null || hashToCompare.isEmpty) {
       return false;
     }
 
     final hash = base64Encode(
-      await deriveKeyFromPassword(password, await getHashingSalt()),
+      await deriveKeyFromPassword(password, salt, algorithm: algorithm),
     );
-    return hash == storedHash;
+    return hash == hashToCompare;
   }
 
   static Future<String> keyToEncodedHash(
     List<int> key,
-    String encodedSalt,
-  ) async {
-    return "\$argon2id\$v=${_algorithm.version}\$m=${_algorithm.memory},t=${_algorithm.iterations},p=${_algorithm.parallelism}\$${base64Encode(key)}\$$encodedSalt";
+    String encodedSalt, {
+    Argon2id? algorithm,
+  }) async {
+    algorithm ??= _algorithm;
+    return "\$argon2id\$v=${algorithm.version}\$m=${algorithm.memory},t=${algorithm.iterations},p=${algorithm.parallelism}\$${base64Encode(key)}\$$encodedSalt";
+  }
+
+  static KdfAlgorithm encodedHashToAlgorithm(String encodedHash) {
+    if (!RegExp(
+      r'^\$(argon2i|argon2d|argon2id)\$v=\d+\$m=\d+,t=\d+,p=\d+\$.+',
+    ).hasMatch(encodedHash)) {
+      throw ArgumentError(t('error.invalid_hash'));
+    }
+    final parts = encodedHash.split('\$');
+    final type = parts[0];
+    final p3 = parts[3].split('=');
+    final memory = p3[1].split(',')[0];
+    final iterations = p3[2].split(',')[0];
+    final parallelism = p3[3];
+    return switch (type) {
+      'argon2i' => Argon2id(
+        memory: int.parse(memory),
+        iterations: int.parse(iterations),
+        parallelism: int.parse(parallelism),
+        hashLength: 32,
+      ),
+      'argon2d' => Argon2id(
+        memory: int.parse(memory),
+        iterations: int.parse(iterations),
+        parallelism: int.parse(parallelism),
+        hashLength: 32,
+      ),
+      'argon2id' => Argon2id(
+        memory: int.parse(memory),
+        iterations: int.parse(iterations),
+        parallelism: int.parse(parallelism),
+        hashLength: 32,
+      ),
+      _ => throw ArgumentError(t('error.invalid_hash')),
+    };
+  }
+
+  static String getHashFromEncoded(String encodedHash) {
+    if (!RegExp(
+      r'^\$(argon2i|argon2d|argon2id)\$v=\d+\$m=\d+,t=\d+,p=\d+\$.+',
+    ).hasMatch(encodedHash)) {
+      throw ArgumentError(t('error.invalid_hash'));
+    }
+    final parts = encodedHash.split('\$');
+    return parts[4];
+  }
+
+  static String getSaltFromEncoded(String encodedHash) {
+    if (!RegExp(
+      r'^\$(argon2i|argon2d|argon2id)\$v=\d+\$m=\d+,t=\d+,p=\d+\$.+',
+    ).hasMatch(encodedHash)) {
+      throw ArgumentError(t('error.invalid_hash'));
+    }
+    final parts = encodedHash.split('\$');
+    return parts[5];
   }
 
   static Future<List<int>> deriveKeyFromPassword(
     String password,
-    String salt,
-  ) async {
-    final secretKey = await _algorithm.deriveKeyFromPassword(
+    String salt, {
+    KdfAlgorithm? algorithm,
+  }) async {
+    algorithm ??= _algorithm;
+    final secretKey = await algorithm.deriveKeyFromPassword(
       password: password,
       nonce: salt.codeUnits,
     );
@@ -285,8 +351,13 @@ class Crypto {
     return keyBytes;
   }
 
-  static Future<List<int>> deriveKeyFromKey(SecretKey key, String salt) async {
-    final secretKey = await _algorithm.deriveKey(
+  static Future<List<int>> deriveKeyFromKey(
+    SecretKey key,
+    String salt, {
+    KdfAlgorithm? algorithm,
+  }) async {
+    algorithm ??= _algorithm;
+    final secretKey = await algorithm.deriveKey(
       secretKey: key,
       nonce: salt.codeUnits,
     );

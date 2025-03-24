@@ -2,9 +2,13 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:open2fa/crypto.dart';
 import 'package:open2fa/database.dart';
 import 'package:open2fa/i18n.dart';
+import 'package:open2fa/main.dart';
+import 'package:open2fa/pages/settings/export_encrypted.dart';
 import 'package:open2fa/structures/account.dart';
 
 class Export {
@@ -41,6 +45,57 @@ class Export {
         json['accounts'].map((x) => Account.fromJson(x)),
       ),
     );
+  }
+
+  static Future<bool> import({
+    bool encrypted = false,
+    BuildContext? context,
+  }) async {
+    try {
+      if (encrypted && context == null) {
+        throw ArgumentError(t('error.no_build_context'));
+      }
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+        allowMultiple: false,
+        withData: true,
+      );
+      if (result != null) {
+        final bytes = result.files.single.bytes;
+        if (bytes == null || bytes.isEmpty) {
+          throw Exception(t('error.import_no_bytes'));
+        }
+        final jsonString = String.fromCharCodes(bytes);
+        final json = jsonDecode(jsonString);
+        Export? export = encrypted ? null : Export.fromJson(json);
+        // ignore: use_build_context_synchronously
+        if (context != null && context.mounted) {
+          await Navigator.of(context)
+            .push(
+              MaterialPageRoute(
+                builder: (context) => const SettingsEncryptedExportPage(),
+              ),
+            )
+            .then(
+              (value) async =>
+                  export = await EncryptedExport.fromJson(json).decrypt(value!),
+            )
+            .catchError((e) {
+              logger.e(t('error.import_fail', args: ['']), error: e);
+              throw e;
+            });
+        }
+        for (final account in export!.accounts) {
+          DatabaseManager.addOrUpdateAccount(await account.encrypt());
+        }
+        return true;
+      }
+      return false;
+    } catch (e) {
+      logger.e(t('error.import_fail', args: ['']), error: e);
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toMap() {
@@ -101,18 +156,25 @@ class EncryptedExport {
     );
   }
 
-  static Future<Export> decrypt(
-    EncryptedExport encryptedExport,
-    String password,
-  ) async {
-    final key = await Crypto.deriveKeyFromPassword(
-      password,
-      encryptedExport.salt,
-    );
+  Future<Export> decrypt(String password) async {
+    try {
+      final valid = await Crypto.comparePassword(
+        password,
+        hashToCompare: Crypto.getHashFromEncoded(passwordHash),
+        salt: Crypto.getSaltFromEncoded(passwordHash),
+      );
+      if (!valid) {
+        throw ArgumentError(t('error.password_invalid'));
+      }
+    } catch (e) {
+      logger.e(e);
+      rethrow;
+    }
+    final key = await Crypto.deriveKeyFromPassword(password, salt);
     final encrypted = SecretBox(
-      base64Decode(encryptedExport.encryptedAccounts),
-      nonce: base64Decode(encryptedExport.nonce),
-      mac: Mac(base64Decode(encryptedExport.mac)),
+      base64Decode(encryptedAccounts),
+      nonce: base64Decode(nonce),
+      mac: Mac(base64Decode(mac)),
     );
     final decryptedData = await Crypto.decryptWithKey(
       encrypted,
@@ -120,7 +182,7 @@ class EncryptedExport {
     );
     final decrypted = json.decode(decryptedData);
     final accounts = List<Account>.from(
-      decrypted.map((x) => Account.fromJson(x)),
+      decrypted.map((x) => Account.fromJsonString(x)),
     );
     return Export(encrypted: false, accounts: accounts);
   }
@@ -138,7 +200,7 @@ class EncryptedExport {
     return map['encrypted'] == true &&
         map['password_hash'] is String &&
         map['salt'] is String &&
-        map['iv'] is String &&
+        map['nonce'] is String &&
         map['mac'] is String &&
         map['encrypted_accounts'] is String;
   }
@@ -150,7 +212,7 @@ class EncryptedExport {
     return EncryptedExport(
       passwordHash: json['password_hash'],
       salt: json['salt'],
-      nonce: json['iv'],
+      nonce: json['nonce'],
       mac: json['mac'],
       encryptedAccounts: json['encrypted_accounts'],
     );

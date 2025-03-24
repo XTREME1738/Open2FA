@@ -89,25 +89,39 @@ class Account {
     required this.createdAt,
   });
 
+  static Account fromJsonString(String jsonString) {
+    return fromJson(jsonDecode(jsonString));
+  }
+
   static Account fromJson(Map<String, dynamic> json) {
-    final algorithmExists = Algorithm.values.any((element) => element.name == json['algorithm']);
-    if (!algorithmExists) {
-      throw ArgumentError(t('error.invalid_algorithm', args: [json['algorithm']]));
-    }
-    return Account(
-      label: json['label'] as String,
-      issuer: json['issuer'] as String,
-      secret: json['secret'] as String,
-      algorithm: Algorithm.values.firstWhere((element) => element.name == json['algorithm']),
-      digits: json['digits'] as int,
-      interval: (json['interval'] ?? '30') as int,
-      counter: (json['counter'] ?? '0') as int,
-      isTOTP: json['type'] == 'totp',
-      isGoogle: json['google'],
-      categories: (json['categories'] as List<dynamic>).cast<String>(),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      createdAt: DateTime.parse(json['created_at'] as String),
+    final algorithmExists = Algorithm.values.any(
+      (element) => element.name == json['algorithm'],
     );
+    if (!algorithmExists) {
+      throw ArgumentError(
+        t('error.invalid_algorithm', args: [json['algorithm']]),
+      );
+    }
+    try {
+      return Account(
+        label: json['label'] as String,
+        issuer: json['issuer'] as String,
+        secret: json['secret'] as String,
+        algorithm: Algorithm.values.firstWhere(
+          (element) => element.name == json['algorithm'],
+        ),
+        digits: json['digits'],
+        interval: json['interval'] ?? 0,
+        counter: json['counter'] ?? 0,
+        isTOTP: json['type'] == 'totp',
+        isGoogle: json['google'],
+        categories: (json['categories'] as List<dynamic>).cast<String>(),
+        updatedAt: DateTime.parse(json['updated_at'] as String),
+        createdAt: DateTime.parse(json['created_at'] as String),
+      );
+    } catch (e) {
+      throw ArgumentError(t('error.invalid_account_format', args: [e]));
+    }
   }
 
   Map<String, dynamic> toMap() {

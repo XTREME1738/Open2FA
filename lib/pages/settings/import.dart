@@ -1,11 +1,6 @@
-import 'dart:convert';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:open2fa/database.dart';
 import 'package:open2fa/i18n.dart';
-import 'package:open2fa/main.dart';
 import 'package:open2fa/structures/export.dart';
 
 class SettingsImportPage extends ConsumerWidget {
@@ -29,38 +24,22 @@ class SettingsImportPage extends ConsumerWidget {
                 subtitle: Text(t('settings.import_open2fa_desc')),
                 onTap: () async {
                   try {
-                    FilePickerResult? result = await FilePicker.platform
-                        .pickFiles(
-                          type: FileType.custom,
-                          allowedExtensions: ['json'],
-                          allowMultiple: false,
-                          withData: true,
-                        );
-                    if (result != null) {
-                      final bytes = result.files.single.bytes;
-                      if (bytes == null || bytes.isEmpty) {
-                        throw Exception(t('error.import_no_bytes'));
-                      }
-                      final jsonString = String.fromCharCodes(bytes);
-                      final json = jsonDecode(jsonString);
-                      final export = Export.fromJson(json);
-                      for (final account in export.accounts) {
-                        DatabaseManager.addOrUpdateAccount(
-                          await account.encrypt(),
-                        );
-                      }
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(t('settings.import_success'))),
-                        );
-                        Navigator.of(context).pop(1);
-                      }
+                    if (context.mounted && await Export.import()) {
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(t('settings.import_success'))),
+                      );
+                      // ignore: use_build_context_synchronously
+                      Navigator.of(context).pop(1);
                     }
                   } catch (e) {
-                    logger.e(t('error.import_fail'), error: e);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(t('error.import_fail'))),
+                        SnackBar(
+                          content: Text(
+                            t('error.import_failed', args: [e.toString()]),
+                          ),
+                        ),
                       );
                     }
                   }
@@ -73,7 +52,33 @@ class SettingsImportPage extends ConsumerWidget {
                 title: Text(t('settings.import_encrypted_open2fa')),
                 subtitle: Text(t('settings.import_encrypted_open2fa_desc')),
                 trailing: Icon(Icons.chevron_right),
-                onTap: () {},
+                onTap: () async {
+                  try {
+                    if (await Export.import(
+                      encrypted: true,
+                      context: context,
+                    )) {
+                      if (context.mounted) {
+                        // ignore: use_build_context_synchronously
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(t('settings.import_success'))),
+                        );
+                        // ignore: use_build_context_synchronously
+                        Navigator.of(context).pop(1);
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            t('error.import_fail', args: [e.toString()]),
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                },
               ),
             ],
           ),

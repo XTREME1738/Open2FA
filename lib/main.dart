@@ -37,9 +37,14 @@ class Open2FA extends ConsumerStatefulWidget {
 class _Open2FAState extends ConsumerState<Open2FA> {
   @override
   void reassemble() {
-    I18n.loadLanguageManifest().then((_) {
-      I18n.load(I18n.currentLanguage);
-    });
+    () async {
+      try {
+        await I18n.loadLanguageManifest();
+        await I18n.load(I18n.currentLanguage);
+      } catch (e) {
+        logger.e(t('error.failed_to_load_language'), error: e);
+      }
+    }();
     super.reassemble();
   }
 
@@ -54,7 +59,11 @@ class _Open2FAState extends ConsumerState<Open2FA> {
       await Prefs.init();
       final themeMode = Prefs.themeMode;
       final useDynamicColour = Prefs.useDynamicColour;
-      I18n.load(Prefs.language);
+      try {
+        await I18n.load(Prefs.language);
+      } catch (e) {
+        logger.e(t('error.failed_to_load_language'), error: e);
+      }
       ref.read(themeModeProvider.notifier).state = themeMode;
       ref.read(themeUseDynamicProvider.notifier).state = useDynamicColour;
       ref.read(useFlagSecureProvider.notifier).state =

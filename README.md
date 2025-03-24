@@ -123,6 +123,6 @@ This is what the encrypted JSON format looks like:
 }
 ```
 
-## Stars
+## GitHub Stars
 
 [![Star History Chart](https://api.star-history.com/svg?repos=XTREME1738/Open2FA&type=Date)](https://www.star-history.com/#XTREME1738/Open2FA&Date)
