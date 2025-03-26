@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:no_screenshot/no_screenshot.dart';
+import 'package:open2fa/crypto.dart';
 import 'package:open2fa/i18n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Prefs {
   static ThemeMode themeMode = ThemeMode.system;
   static bool useDynamicColour = true;
-  static String language = 'en';
+  static String language = 'en_gb';
   static bool setupComplete = false;
   static bool useFlagSecure = false;
   static bool hideCodes = false;
@@ -31,7 +32,7 @@ class Prefs {
 
   static Future<String> getLanguage() async {
     final prefs = SharedPreferencesAsync();
-    return await prefs.getString('language') ?? 'en';
+    return await prefs.getString('language') ?? 'en_gb';
   }
 
   static Future<bool> getSetupComplete() async {
@@ -52,6 +53,11 @@ class Prefs {
     I18n.load(value);
   }
 
+  static Future setAutoLock(int value) async {
+    final prefs = SharedPreferencesAsync();
+    await prefs.setInt('autoLock', value);
+  }
+
   static Future setTheme(ThemeMode value) async {
     final theme = value.toString().split('.').last;
     final prefs = SharedPreferencesAsync();
@@ -63,6 +69,15 @@ class Prefs {
     final prefs = SharedPreferencesAsync();
     await prefs.setBool('useDynamicColour', value);
     useDynamicColour = value;
+  }
+
+  static Future<int> getAutoLock() async {
+    final prefs = SharedPreferencesAsync();
+    if (!await Crypto.isAuthRequired()) {
+      return -1;
+    }
+    final autoLock = await prefs.getInt('autoLock');
+    return autoLock ?? 0;
   }
 
   static Future getFlagSecure() async {
