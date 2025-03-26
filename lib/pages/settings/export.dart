@@ -1,10 +1,12 @@
+import 'dart:convert';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open2fa/i18n.dart';
 import 'package:open2fa/main.dart';
 import 'package:open2fa/pages/settings/export_encrypted.dart';
-import 'package:open2fa/structures/export.dart';
+import 'package:open2fa/structures/importing/open2fa.dart';
 
 class SettingsExportSheet extends ConsumerWidget {
   const SettingsExportSheet({super.key});
@@ -48,14 +50,14 @@ class SettingsExportSheet extends ConsumerWidget {
             trailing: Icon(Icons.chevron_right),
             onTap: () async {
               try {
-                final export = await Export.generate();
+                final export = await Open2FAExport.create();
                 String? outputFile = await FilePicker.platform.saveFile(
                   allowedExtensions: ['json'],
                   type: FileType.custom,
                   fileName:
                       '${t('app_title')}_${DateTime.now().toIso8601String()}.json',
                   initialDirectory: '/storage/emulated/0',
-                  bytes: export.toJsonBytes(),
+                  bytes: utf8.encode(export),
                 );
                 if (context.mounted && outputFile != null) {
                   // ignore: use_build_context_synchronously

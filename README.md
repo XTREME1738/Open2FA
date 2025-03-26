@@ -33,7 +33,8 @@ If you would like to see Open2FA on iOS, please consider donating to help me cov
 > Physical security keys like Yubikeys are recommended over passkeys, and TOTP, if you have the option of using a physical security key, then you should use one.
 
 Passkeys may eventually be supported in Open2FA, but it is not a priority, and may not be added for a while, if at all.
-When I have some time, I will look into adding support for passkeys, but for now, it is not a priority.
+When I have some time, I may look into adding support for passkeys.
+This may not even be a possibility due to the limitations of Flutter, and possibly Android itself.
 
 ## Security
 

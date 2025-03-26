@@ -1,9 +1,11 @@
+import 'dart:convert';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open2fa/i18n.dart';
 import 'package:open2fa/main.dart';
-import 'package:open2fa/structures/export.dart';
+import 'package:open2fa/structures/importing/open2fa.dart';
 
 class SettingsEncryptedExportPage extends ConsumerStatefulWidget {
   final bool encryptedExport;
@@ -144,8 +146,8 @@ class _SettingsEncryptedExportPageState
                         }
                         if (widget.encryptedExport) {
                           try {
-                            final export = await EncryptedExport.generate(
-                              _passwordController.text,
+                            final export = await Open2FAExport.create(
+                              password: _passwordController.text,
                             );
                             String?
                             outputFile = await FilePicker.platform.saveFile(
@@ -154,7 +156,7 @@ class _SettingsEncryptedExportPageState
                               fileName:
                                   '${t('app_title')}_${DateTime.now().toIso8601String()}.json',
                               initialDirectory: '/storage/emulated/0',
-                              bytes: export.toJsonBytes(),
+                              bytes: utf8.encode(export),
                             );
                             if (mounted && outputFile != null) {
                               // ignore: use_build_context_synchronously

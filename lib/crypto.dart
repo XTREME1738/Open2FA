@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hashlib/hashlib.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:open2fa/database.dart';
 import 'package:open2fa/i18n.dart';
@@ -281,7 +282,7 @@ class Crypto {
     return "\$argon2id\$v=${algorithm.version}\$m=${algorithm.memory},t=${algorithm.iterations},p=${algorithm.parallelism}\$${base64Encode(key)}\$$encodedSalt";
   }
 
-  static KdfAlgorithm encodedHashToAlgorithm(String encodedHash) {
+  static KdfAlgorithm argon2HashToAlgorithm(String encodedHash) {
     if (!RegExp(
       r'^\$(argon2i|argon2d|argon2id)\$v=\d+\$m=\d+,t=\d+,p=\d+\$.+',
     ).hasMatch(encodedHash)) {
@@ -340,15 +341,22 @@ class Crypto {
     String password,
     String salt, {
     KdfAlgorithm? algorithm,
+    KeyDerivatorBase? keyDerivator, // For hashlib compatibility
   }) async {
-    algorithm ??= _algorithm;
-    final secretKey = await algorithm.deriveKeyFromPassword(
-      password: password,
-      nonce: salt.codeUnits,
-    );
+    if (keyDerivator != null) {
+      // salt is passed when making the keyDerivator
+      final digest = keyDerivator.convert(password.codeUnits);
+      return digest.bytes;
+    } else {
+      algorithm ??= _algorithm;
+      final secretKey = await algorithm.deriveKeyFromPassword(
+        password: password,
+        nonce: salt.codeUnits,
+      );
 
-    final keyBytes = await secretKey.extractBytes();
-    return keyBytes;
+      final keyBytes = await secretKey.extractBytes();
+      return keyBytes;
+    }
   }
 
   static Future<List<int>> deriveKeyFromKey(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open2fa/i18n.dart';
 import 'package:open2fa/structures/export.dart';
+import 'package:open2fa/structures/importing/aegis.dart';
+import 'package:open2fa/structures/importing/open2fa.dart';
 
 class SettingsImportPage extends ConsumerWidget {
   const SettingsImportPage({super.key});
@@ -22,27 +24,13 @@ class SettingsImportPage extends ConsumerWidget {
                 ),
                 title: Text(t('settings.import_open2fa')),
                 subtitle: Text(t('settings.import_open2fa_desc')),
+                trailing: Icon(Icons.chevron_right),
                 onTap: () async {
-                  try {
-                    if (context.mounted && await Export.import()) {
-                      // ignore: use_build_context_synchronously
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(t('settings.import_success'))),
-                      );
-                      // ignore: use_build_context_synchronously
-                      Navigator.of(context).pop(1);
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            t('error.import_failed', args: [e.toString()]),
-                          ),
-                        ),
-                      );
-                    }
-                  }
+                  await Export.import(
+                    Open2FAExport(),
+                    context,
+                    encrypted: true,
+                  );
                 },
               ),
               ListTile(
@@ -53,31 +41,40 @@ class SettingsImportPage extends ConsumerWidget {
                 subtitle: Text(t('settings.import_encrypted_open2fa_desc')),
                 trailing: Icon(Icons.chevron_right),
                 onTap: () async {
-                  try {
-                    if (await Export.import(
-                      encrypted: true,
-                      context: context,
-                    )) {
-                      if (context.mounted) {
-                        // ignore: use_build_context_synchronously
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(t('settings.import_success'))),
-                        );
-                        // ignore: use_build_context_synchronously
-                        Navigator.of(context).pop(1);
-                      }
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            t('error.import_fail', args: [e.toString()]),
-                          ),
-                        ),
-                      );
-                    }
-                  }
+                  await Export.import(
+                    Open2FAExport(),
+                    context,
+                    encrypted: true,
+                  );
+                },
+              ),
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                title: Text(t('settings.import_aegis')),
+                subtitle: Text(t('settings.import_aegis_desc')),
+                trailing: Icon(Icons.chevron_right),
+                onTap: () async {
+                  await Export.import(
+                    AegisExport(),
+                    context,
+                  );
+                },
+              ),
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                title: Text(t('settings.import_encrypted_aegis')),
+                subtitle: Text(t('settings.import_encrypted_aegis_desc')),
+                trailing: Icon(Icons.chevron_right),
+                onTap: () async {
+                  await Export.import(
+                    AegisExport(),
+                    context,
+                    encrypted: true,
+                  );
                 },
               ),
             ],
