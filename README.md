@@ -1,5 +1,6 @@
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/xtremedev)
 [![Liberapay](https://img.shields.io/badge/Liberapay-F6C915?logo=liberapay&logoColor=black)](https://liberapay.com/XTREME)
+[![Github Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-30363D?&logo=GitHub-Sponsors&logoColor=EA4AAA)](https://github.com/sponsors/XTREME1738)
 
 > [!WARNING]
 > This app is in very early development, you can use it, however please be warned that there could be bugs, and data loss, please make sure to backup your data, and use at your own risk.
