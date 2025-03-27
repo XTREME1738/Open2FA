@@ -46,7 +46,8 @@ class _TwoFactorCircularProgressIndicatorState
     final interval = widget.interval;
     final initialSeconds = DateTime.now().second % interval;
     final initialProgress = initialSeconds / interval;
-    _controller.forward(from: initialProgress);
+    final initialProgressRounded = (initialProgress * 100).round() / 100;
+    _controller.forward(from: initialProgressRounded);
   }
 
   @override

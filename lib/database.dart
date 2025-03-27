@@ -134,7 +134,7 @@ class DatabaseManager {
     ''');
     _db.execute('''
 	  CREATE TABLE IF NOT EXISTS categories (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uuid TEXT PRIMARY KEY NOT NULL,
 		encrypted_data TEXT NOT NULL,
     nonce TEXT,
     mac TEXT,
@@ -164,9 +164,8 @@ class DatabaseManager {
       final decryptedDataJson = json.decode(decryptedData);
       categories.add(
         Category(
-          id: row['id'] as int,
-          uuid: decryptedDataJson.uuid,
-          name: decryptedDataJson.name,
+          uuid: row['uuid'] as String,
+          name: decryptedDataJson['name'] as String,
           updatedAt: DateTime.parse(row['updated_at'] as String),
           createdAt: DateTime.parse(row['created_at'] as String),
         ),
@@ -231,13 +230,13 @@ class DatabaseManager {
       try {
         final encrypted = await Crypto.encrypt(category.name);
         final query = _instance._db.prepare(
-          'UPDATE categories SET encrypted_data = ?, nonce = ?, mac = ? WHERE id = ?;',
+          'UPDATE categories SET encrypted_data = ?, nonce = ?, mac = ? WHERE uuid = ?;',
         );
         query.execute([
           base64Encode(encrypted.cipherText),
           base64Encode(encrypted.nonce),
           base64Encode(encrypted.mac.bytes),
-          category.id,
+          category.uuid,
         ]);
       } catch (e) {
         rethrow;
@@ -250,14 +249,14 @@ class DatabaseManager {
       throw StateError(t('error.db_not_connected'));
     }
     final query = _instance._db.prepare(
-      'INSERT INTO categories (encrypted_data, nonce, mac, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET encrypted_data = excluded.encrypted_data, nonce = excluded.nonce, mac = excluded.mac, updated_at = excluded.updated_at;',
+      'INSERT INTO categories (uuid, encrypted_data, nonce, mac, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(uuid) DO UPDATE SET encrypted_data = excluded.encrypted_data, nonce = excluded.nonce, mac = excluded.mac, updated_at = excluded.updated_at;',
     );
     final encryptedData = await Crypto.encrypt(jsonEncode({
       'name': category.name,
-      'uuid': category.uuid,
     }));
     query.execute([
-      encryptedData.cipherText,
+      category.uuid,
+      base64Encode(encryptedData.cipherText),
       base64Encode(encryptedData.nonce),
       base64Encode(encryptedData.mac.bytes),
       category.updatedAt.toIso8601String(),

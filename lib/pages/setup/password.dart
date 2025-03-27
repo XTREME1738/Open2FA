@@ -22,6 +22,7 @@ class _SetupAuthPasswordPageState extends ConsumerState<SetupAuthPasswordPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _bioAuthEnabled = false;
+  bool _isFinishing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +47,7 @@ class _SetupAuthPasswordPageState extends ConsumerState<SetupAuthPasswordPage> {
                 child: Column(
                   children: [
                     TextFormField(
+                      enabled: !_isFinishing,
                       controller: _passwordController,
                       decoration: InputDecoration(
                         labelText: t('setup.auth_enter_password'),
@@ -96,6 +98,7 @@ class _SetupAuthPasswordPageState extends ConsumerState<SetupAuthPasswordPage> {
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
+                      enabled: !_isFinishing,
                       controller: _confirmPasswordController,
                       decoration: InputDecoration(
                         labelText: t('setup.auth_enter_password_confirm'),
@@ -135,7 +138,7 @@ class _SetupAuthPasswordPageState extends ConsumerState<SetupAuthPasswordPage> {
                 title: Text(t('settings.auth_use_biometrics')),
                 subtitle: Text(t('settings.auth_use_biometrics_desc')),
                 value: _bioAuthEnabled,
-                onChanged: (value) async {
+                onChanged: _isFinishing ? null : (value) async {
                   if (!value) {
                     setState(() {
                       _bioAuthEnabled = false;
@@ -181,7 +184,7 @@ class _SetupAuthPasswordPageState extends ConsumerState<SetupAuthPasswordPage> {
             Align(
               alignment: Alignment.bottomLeft,
               child: FloatingActionButton(
-                onPressed: () {
+                onPressed: _isFinishing ? null : () {
                   Navigator.of(context).pop();
                 },
                 heroTag: null,
@@ -191,8 +194,10 @@ class _SetupAuthPasswordPageState extends ConsumerState<SetupAuthPasswordPage> {
             Align(
               alignment: Alignment.bottomRight,
               child: FloatingActionButton(
-                onPressed: () async {
+                onPressed: _isFinishing ? null : () async {
                   if (_formKey.currentState!.validate()) {
+                    _isFinishing = true;
+                    setState(() {});
                     await Crypto.setupPasswordAuth(_passwordController.text);
                     await Crypto.setBiometricsEnabled(_bioAuthEnabled);
                     await Prefs.setSetupComplete(true);

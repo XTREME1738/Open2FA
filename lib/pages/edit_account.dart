@@ -1,20 +1,25 @@
 import 'package:base32/base32.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:multi_dropdown/multi_dropdown.dart';
 import 'package:open2fa/database.dart';
 import 'package:open2fa/i18n.dart';
+import 'package:open2fa/main.dart';
+import 'package:open2fa/pages/vault.dart';
 import 'package:open2fa/structures/account.dart';
+import 'package:open2fa/structures/category.dart';
 import 'package:otp/otp.dart';
 
-class EditAccountPage extends StatefulWidget {
+class EditAccountPage extends ConsumerStatefulWidget {
   final Account? account;
 
   const EditAccountPage({super.key, this.account});
 
   @override
-  State<EditAccountPage> createState() => _EditAccountPageState();
+  ConsumerState<EditAccountPage> createState() => _EditAccountPageState();
 }
 
-class _EditAccountPageState extends State<EditAccountPage> {
+class _EditAccountPageState extends ConsumerState<EditAccountPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _issuerController = TextEditingController();
@@ -22,8 +27,11 @@ class _EditAccountPageState extends State<EditAccountPage> {
   final _intervalController = TextEditingController();
   final _counterController = TextEditingController();
   final _digitsController = TextEditingController();
+  final _categoryController = MultiSelectController<String>();
+  final _categoryFormKey = GlobalKey<FormState>();
+  final _categoryNameController = TextEditingController();
   Algorithm _algorithm = Algorithm.SHA1;
-  final List<String> _categories = const [];
+  final _categories = <String>[];
   bool _isGoogle = true;
   bool _isTOTP = true;
 
@@ -66,6 +74,7 @@ class _EditAccountPageState extends State<EditAccountPage> {
 
   @override
   Widget build(BuildContext context) {
+    final categories = ref.watch(categoryProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -196,25 +205,177 @@ class _EditAccountPageState extends State<EditAccountPage> {
                 },
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField(
-                decoration: InputDecoration(
+              MultiDropdown(
+                controller: _categoryController,
+                fieldDecoration: FieldDecoration(
                   labelText: t('account.categories'),
-                  border: const OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
                 ),
-                value: _categories.isNotEmpty ? _categories.first : null,
-                items:
-                    _categories
-                        .map(
-                          (category) => DropdownMenuItem(
-                            value: category,
-                            child: Text(category),
+                dropdownDecoration: DropdownDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  elevation: 10,
+                ),
+                dropdownItemDecoration: DropdownItemDecoration(
+                  selectedBackgroundColor:
+                      Theme.of(context).colorScheme.surfaceContainer,
+                ),
+                chipDecoration: ChipDecoration(
+                  backgroundColor: Theme.of(context).colorScheme.surfaceTint,
+                  labelStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                  deleteIcon: Icon(
+                    Icons.close,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    size: 16,
+                  ),
+                ),
+                searchEnabled: false,
+                items: [
+                  ...categories.map(
+                    (category) => DropdownItem(
+                      value: category.uuid,
+                      label: category.name,
+                    ),
+                  ),
+                  DropdownItem(
+                    label: t('edit_account.create_category'),
+                    value: 'create',
+                  ),
+                ],
+                onSelectionChange: (selected) {
+                  if (selected.isNotEmpty &&
+                      selected.firstWhere(
+                            (element) => element == 'create',
+                            orElse: () => '',
+                          ) ==
+                          'create') {
+                    _categoryController.unselectWhere(
+                      (element) => element.value == 'create',
+                    );
+                    _categoryController.closeDropdown();
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (context) {
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Form(
+                                key: _categoryFormKey,
+                                child: Column(
+                                  children: [
+                                    TextFormField(
+                                      controller: _categoryNameController,
+                                      decoration: InputDecoration(
+                                        labelText: t(
+                                          'edit_account.category_name',
+                                        ),
+                                        border: const OutlineInputBorder(),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return t(
+                                            'error.category_name_required',
+                                          );
+                                        }
+                                        if (value.length > 16) {
+                                          return t('error.category_name_max');
+                                        }
+                                        if (value.length < 3) {
+                                          return t('error.category_name_min');
+                                        }
+                                        if (!RegExp(
+                                          r'^[a-zA-Z0-9_\- ]+$',
+                                        ).hasMatch(value)) {
+                                          return t(
+                                            'error.category_name_invalid',
+                                          );
+                                        }
+                                        if (categories.any(
+                                          (element) =>
+                                              element.name.toLowerCase() ==
+                                              value.toLowerCase(),
+                                        )) {
+                                          return t(
+                                            'error.category_name_exists',
+                                          );
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                style: OutlinedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  if (!_categoryFormKey.currentState!
+                                      .validate()) {
+                                    return;
+                                  }
+                                  final category = Category(
+                                    name: _categoryNameController.text,
+                                    uuid: DateTime.now().toString(),
+                                    createdAt: DateTime.now(),
+                                    updatedAt: DateTime.now(),
+                                  );
+                                  try {
+                                    await DatabaseManager.addOrUpdateCategory(
+                                      category,
+                                    );
+                                    ref.read(categoryProvider.notifier).state.add(category);
+                                    _categoryController.addItem(
+                                      DropdownItem(
+                                        label: category.name,
+                                        value: category.uuid,
+                                      ),
+                                    );
+                                    setState(() {});
+                                    if (mounted) {
+                                      Navigator.of(context).pop(category);
+                                    }
+                                  } catch (e) {
+                                    logger.e(
+                                      t('error.category_create_fail'),
+                                      error: e,
+                                    );
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text(e.toString())),
+                                      );
+                                    }
+                                  }
+                                },
+                                child: Text(t('edit_account.create_category')),
+                              ),
+                              SizedBox(
+                                height:
+                                    MediaQuery.of(context).viewInsets.bottom,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                           ),
-                        )
-                        .toList(),
-                onChanged: (String? value) {
+                        );
+                      },
+                    );
+                  }
                   setState(() {
                     _categories.clear();
-                    _categories.add(value!);
+                    _categories.addAll(selected);
                   });
                 },
               ),
@@ -304,7 +465,7 @@ class _EditAccountPageState extends State<EditAccountPage> {
         onPressed: () {
           if (_formKey.currentState!.validate()) {
             final account = Account(
-              id: widget.account?.id,
+              id: widget.account?.id ?? -1,
               label: _nameController.text,
               issuer: _issuerController.text,
               secret: _secretController.text,

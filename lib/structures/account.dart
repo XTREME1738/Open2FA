@@ -6,7 +6,7 @@ import 'package:open2fa/structures/encrypted_account.dart';
 import 'package:otp/otp.dart';
 
 class Account {
-  final int? id;
+  final int id;
   final String label;
   final String issuer;
   final String secret;
@@ -93,6 +93,23 @@ class Account {
     required this.createdAt,
   });
 
+  bool hasCategory(String uuid) {
+    if (uuid == '') {
+      return true;
+    }
+    return categories.contains(uuid);
+  }
+
+  bool matchesFilter(String filter) {
+    if (filter.isEmpty) {
+      return true;
+    }
+    final lowerFilter = filter.toLowerCase();
+    return label.toLowerCase().contains(lowerFilter) ||
+        issuer.toLowerCase().contains(lowerFilter) ||
+        secret.toLowerCase().contains(lowerFilter);
+  }
+
   static Account fromJsonString(String jsonString) {
     return fromJson(jsonDecode(jsonString));
   }
@@ -130,16 +147,12 @@ class Account {
 
   Map<String, dynamic> toMap() {
     return {
-      'label': label,
-      'issuer': issuer,
-      'secret': secret,
       'algorithm': algorithm.name,
       'type': isTOTP ? 'totp' : 'hotp',
       'digits': digits,
       'interval': interval,
       'counter': counter,
       'google': isGoogle,
-      'categories': categories,
       'updated_at': updatedAt.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
     };

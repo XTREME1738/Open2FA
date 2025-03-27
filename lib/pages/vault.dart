@@ -25,7 +25,7 @@ class VaultPage extends ConsumerStatefulWidget {
 class _VaultPageState extends ConsumerState<VaultPage> {
   final List<Account> accounts = [];
   final _filterController = TextEditingController();
-  int _categoryIndex = -1;
+  String _categoryUuid = '';
 
   void update2FACodes() {
     for (final account in accounts) {
@@ -187,10 +187,10 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: ChoiceChip(
                         label: Text(t('all')),
-                        selected: _categoryIndex == -1,
+                        selected: _categoryUuid == '',
                         onSelected: (selected) {
                           setState(() {
-                            _categoryIndex = -1;
+                            _categoryUuid = '';
                           });
                         },
                       ),
@@ -200,10 +200,11 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: ChoiceChip(
                           label: Text(categories[index].name),
-                          selected: _categoryIndex == index,
+                          selected: _categoryUuid ==
+                              categories[index].uuid,
                           onSelected: (selected) {
                             setState(() {
-                              _categoryIndex = selected ? index : -1;
+                              _categoryUuid = categories[index].uuid;
                             });
                           },
                         ),
@@ -222,23 +223,15 @@ class _VaultPageState extends ConsumerState<VaultPage> {
         children: [
           for (final account in accounts.where(
             (account) =>
-                (_categoryIndex != -1 &&
-                    account.categories.contains(
-                      categories[_categoryIndex].id.toString(),
-                    )) &&
-                (account.label.toLowerCase().contains(
-                      _filterController.text.toLowerCase(),
-                    ) ||
-                    account.issuer.toLowerCase().contains(
-                      _filterController.text.toLowerCase(),
-                    )),
+                account.hasCategory(_categoryUuid) &&
+                account.matchesFilter(_filterController.text),
           ))
             TwoFactorAccountCard(
               account: account,
               accountCode: account.code,
               accountNextCode: account.nextCode,
               delete: () async {
-                DatabaseManager.removeAccount(account.id!);
+                DatabaseManager.removeAccount(account.id);
                 updateAccounts();
               },
             ),
@@ -258,7 +251,10 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                 ),
               )
               .then((value) {
-                updateAccounts();
+                if (value != null) {
+                  accounts.add(value);
+                  update2FACodes();
+                }
                 setState(() {});
               });
         },
