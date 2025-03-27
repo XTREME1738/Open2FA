@@ -54,11 +54,12 @@ Encrypted exports use the same encryption as the account data, but with a differ
 
 ## Translations
 
-If you would like to help translate Open2FA, you can do so by making a PR with the translations.
-All translations are stored under the `i18n/` directory, and are in the format of `languageCode.json`, for example, `en.json`, `de.json`, `fr.json`, etc.
-For languages that have multiple dialects, please use the language code, and the dialect code, for example, `en_us.json`.
+> [!NOTE]
+> Make sure to update the `manifest.json` if you are adding a new language.
 
-Make sure to update the `manifest.json` if you are adding a new language.
+If you would like to help translate Open2FA, you can do so by making a PR with the translations.
+All translations are stored under the `i18n/` directory, and are in the format of `languageCode.json`, for example, `en_gb.json`, `fr.json`, etc.
+For languages that have multiple dialects, please use the language code, and the dialect code, for example, `en_us.json`, `en_gb.json`, etc.
 
 ## Contributing
 
@@ -79,34 +80,44 @@ This is an example of the JSON format:
 ```json
 {
   "encrypted": false,
-  "accounts": [
-    {
-      "label": "user@example.com",
-      "issuer": "Example",
-      "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
-      "algorithm": "SHA1",
-      "type": "totp",
-      "digits": 6,
-      "interval": 30,
-      "google": true,
-      "categories": [],
-      "updated_at": "2022-01-01T00:00:00.000Z",
-      "created_at": "2022-01-01T00:00:00.000Z"
-    },
-    {
-      "label": "user2@example.com",
-      "issuer": "Example",
-      "secret": "JBSWY3DPEHPK3PXP",
-      "algorithm": "SHA512",
-      "type": "hotp",
-      "digits": 8,
-      "counter": 1,
-      "google": true,
-      "categories": ["Example"],
-      "updated_at": "2022-01-01T00:00:00.000Z",
-      "created_at": "2022-01-01T00:00:00.000Z"
-    }
-  ]
+  "db": {
+	"categories": [
+		{
+			"uuid": "3cffa94e-b8c7-4461-b4d6-7fa69cf88bbb",
+			"name": "Example",
+			"updated_at": "2022-01-01T00:00:00.000Z",
+			"created_at": "2022-01-01T00:00:00.000Z"
+		}
+	],
+	"accounts": [
+		{
+		"label": "user@example.com",
+		"issuer": "Example",
+		"secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
+		"algorithm": "SHA1",
+		"type": "totp",
+		"digits": 6,
+		"interval": 30,
+		"google": true,
+		"categories": [],
+		"updated_at": "2022-01-01T00:00:00.000Z",
+		"created_at": "2022-01-01T00:00:00.000Z"
+		},
+		{
+		"label": "user2@example.com",
+		"issuer": "Example",
+		"secret": "JBSWY3DPEHPK3PXP",
+		"algorithm": "SHA512",
+		"type": "hotp",
+		"digits": 8,
+		"counter": 1,
+		"google": true,
+		"categories": ["3cffa94e-b8c7-4461-b4d6-7fa69cf88bbb"],
+		"updated_at": "2022-01-01T00:00:00.000Z",
+		"created_at": "2022-01-01T00:00:00.000Z"
+		}
+	]
+  }
 }
 ```
 
@@ -120,7 +131,7 @@ This is what the encrypted JSON format looks like:
   "salt": "{base64 encoded salt}",
   "nonce": "{base64 encoded nonce}",
   "mac": "{base64 encoded mac}",
-  "encryptedAccounts": "{base64 encoded encrypted accounts}"
+  "db": "{base64 encoded encrypted db}"
 }
 ```
 

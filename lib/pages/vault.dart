@@ -24,7 +24,8 @@ class VaultPage extends ConsumerStatefulWidget {
 
 class _VaultPageState extends ConsumerState<VaultPage> {
   final List<Account> accounts = [];
-  int _categoryIndex = 0;
+  final _filterController = TextEditingController();
+  int _categoryIndex = -1;
 
   void update2FACodes() {
     for (final account in accounts) {
@@ -97,9 +98,7 @@ class _VaultPageState extends ConsumerState<VaultPage> {
     if (vaultLocked) {
       Future.delayed(const Duration(milliseconds: 150), () {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const AuthPage(),
-          ),
+          MaterialPageRoute(builder: (context) => const AuthPage()),
         );
       });
     }
@@ -111,7 +110,7 @@ class _VaultPageState extends ConsumerState<VaultPage> {
         backgroundColor: Theme.of(context).colorScheme.surface,
         shadowColor: Theme.of(context).colorScheme.shadow,
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(categories.isEmpty ? 24 : 72),
+          preferredSize: Size.fromHeight(72),
           child: Container(
             padding: const EdgeInsets.all(0),
             child: Column(
@@ -122,6 +121,7 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                     children: [
                       Expanded(
                         child: TextField(
+                          controller: _filterController,
                           decoration: InputDecoration(
                             hintText: t('search'),
                             prefixIcon: const Icon(Icons.search),
@@ -170,7 +170,8 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                                 ),
                                 onTap: () {
                                   Crypto.lockVault();
-                                  ref.read(vaultLockedProvider.notifier).state = true;
+                                  ref.read(vaultLockedProvider.notifier).state =
+                                      true;
                                 },
                               ),
                           ];
@@ -182,6 +183,18 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                 Row(
                   children: [
                     const SizedBox(width: 4),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ChoiceChip(
+                        label: Text(t('all')),
+                        selected: _categoryIndex == -1,
+                        onSelected: (selected) {
+                          setState(() {
+                            _categoryIndex = -1;
+                          });
+                        },
+                      ),
+                    ),
                     ...List.generate(categories.length, (index) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -190,7 +203,7 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                           selected: _categoryIndex == index,
                           onSelected: (selected) {
                             setState(() {
-                              _categoryIndex = selected ? index : 0;
+                              _categoryIndex = selected ? index : -1;
                             });
                           },
                         ),
@@ -207,7 +220,19 @@ class _VaultPageState extends ConsumerState<VaultPage> {
       ),
       body: ListView(
         children: [
-          for (final account in accounts)
+          for (final account in accounts.where(
+            (account) =>
+                (_categoryIndex != -1 &&
+                    account.categories.contains(
+                      categories[_categoryIndex].id.toString(),
+                    )) &&
+                (account.label.toLowerCase().contains(
+                      _filterController.text.toLowerCase(),
+                    ) ||
+                    account.issuer.toLowerCase().contains(
+                      _filterController.text.toLowerCase(),
+                    )),
+          ))
             TwoFactorAccountCard(
               account: account,
               accountCode: account.code,

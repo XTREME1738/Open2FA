@@ -154,17 +154,19 @@ class DatabaseManager {
     final query = _instance._db.prepare('SELECT * FROM categories;');
     final categories = <Category>[];
     for (final row in query.select()) {
-      final decryptedName = await Crypto.decrypt(
+      final decryptedData = await Crypto.decrypt(
         SecretBox(
           base64Decode(row['encrypted_data'] as String),
           nonce: base64Decode(row['nonce'] as String),
           mac: Mac(base64Decode(row['mac'] as String)),
         ),
       );
+      final decryptedDataJson = json.decode(decryptedData);
       categories.add(
         Category(
           id: row['id'] as int,
-          name: decryptedName,
+          uuid: decryptedDataJson.uuid,
+          name: decryptedDataJson.name,
           updatedAt: DateTime.parse(row['updated_at'] as String),
           createdAt: DateTime.parse(row['created_at'] as String),
         ),
@@ -250,11 +252,14 @@ class DatabaseManager {
     final query = _instance._db.prepare(
       'INSERT INTO categories (encrypted_data, nonce, mac, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET encrypted_data = excluded.encrypted_data, nonce = excluded.nonce, mac = excluded.mac, updated_at = excluded.updated_at;',
     );
-    final encryptedName = await Crypto.encrypt(category.name);
+    final encryptedData = await Crypto.encrypt(jsonEncode({
+      'name': category.name,
+      'uuid': category.uuid,
+    }));
     query.execute([
-      encryptedName.cipherText,
-      base64Encode(encryptedName.nonce),
-      base64Encode(encryptedName.mac.bytes),
+      encryptedData.cipherText,
+      base64Encode(encryptedData.nonce),
+      base64Encode(encryptedData.mac.bytes),
       category.updatedAt.toIso8601String(),
     ]);
     return true;

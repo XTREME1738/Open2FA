@@ -6,6 +6,7 @@ import 'package:open2fa/database.dart';
 import 'package:open2fa/i18n.dart';
 import 'package:open2fa/main.dart';
 import 'package:open2fa/structures/account.dart';
+import 'package:open2fa/structures/category.dart';
 import 'package:open2fa/structures/export.dart';
 
 class Open2FAExport extends ExportBase {
@@ -25,7 +26,7 @@ class Open2FAExport extends ExportBase {
       final salt = json['salt'];
       final nonce = json['nonce'];
       final mac = json['mac'];
-      final encryptedAccounts = json['encrypted_accounts'];
+      final db = json['db'];
       try {
         final valid = await Crypto.comparePassword(
           decryptionPassword,
@@ -41,7 +42,7 @@ class Open2FAExport extends ExportBase {
       }
       final key = await Crypto.deriveKeyFromPassword(decryptionPassword, salt);
       final encrypted = SecretBox(
-        base64Decode(encryptedAccounts),
+        base64Decode(db),
         nonce: base64Decode(nonce),
         mac: Mac(base64Decode(mac)),
       );
@@ -49,15 +50,29 @@ class Open2FAExport extends ExportBase {
         encrypted,
         SecretKey(key),
       );
-      final decrypted = json.decode(decryptedData);
+      final decrypted = jsonDecode(decryptedData);
+      final decryptedAccounts = decrypted['accounts'];
+      if (decryptedAccounts == null) {
+        throw ArgumentError(t('error.invalid_export_format'));
+      }
+      final decryptedCategories = decrypted['categories'];
+      if (decryptedCategories == null) {
+        throw ArgumentError(t('error.invalid_export_format'));
+      }
       final accounts = List<Account>.from(
-        decrypted.map((x) => Account.fromJsonString(x)),
+        decryptedAccounts.map((x) => Account.fromJson(x)),
       );
-      return Export(accounts: accounts);
+      final categories = List<Category>.from(
+        decryptedCategories.map((x) => Category.fromJson(x)),
+      );
+      return Export(accounts: accounts, categories: categories);
     }
     return Export(
+      categories: List<Category>.from(
+        json['db']['categories'].map((x) => Category.fromJson(x)),
+      ),
       accounts: List<Account>.from(
-        json['accounts'].map((x) => Account.fromJson(x)),
+        json['db']['accounts'].map((x) => Account.fromJson(x)),
       ),
     );
   }
@@ -71,9 +86,10 @@ class Open2FAExport extends ExportBase {
             json['salt'] is String &&
             json['nonce'] is String &&
             json['mac'] is String &&
-            json['encrypted_accounts'] is String;
+            json['db'] is String;
       }
-      return json['encrypted'] == false && json['accounts'] is List;
+      return json['encrypted'] == false && json['db']['accounts'] is List &&
+          json['db']['categories'] is List;
     } catch (e) {
       return false;
     }
@@ -111,7 +127,10 @@ class Open2FAExport extends ExportBase {
     }
     return jsonEncode({
       'encrypted': false,
-      'accounts': await DatabaseManager.getAccounts(),
+      'db': {
+        'categories': await DatabaseManager.getCategories(),
+        'accounts': await DatabaseManager.getAccounts()
+      },
     });
   }
 }

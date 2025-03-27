@@ -7,6 +7,7 @@ import 'package:open2fa/i18n.dart';
 import 'package:open2fa/main.dart';
 import 'package:open2fa/pages/settings/export_encrypted.dart';
 import 'package:open2fa/structures/account.dart';
+import 'package:open2fa/structures/category.dart';
 
 abstract class ExportBase {
   Future<Export> generate(
@@ -19,7 +20,8 @@ abstract class ExportBase {
 
 class Export {
   List<Account> accounts;
-  Export({required this.accounts});
+  List<Category> categories;
+  Export({required this.accounts, this.categories = const []});
 
   static Future<String> _requestPassword(BuildContext context) async {
     if (context.mounted) {
