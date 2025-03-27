@@ -34,6 +34,7 @@ class Account {
       DateTime.now().millisecondsSinceEpoch,
       interval: interval,
       length: digits,
+      algorithm: algorithm,
       isGoogle: isGoogle,
     );
     nextCode = OTP.generateTOTPCodeString(
@@ -41,6 +42,7 @@ class Account {
       DateTime.now().millisecondsSinceEpoch + interval * 1000,
       interval: interval,
       length: digits,
+      algorithm: algorithm,
       isGoogle: isGoogle,
     );
   }
@@ -55,12 +57,14 @@ class Account {
       secret,
       counter,
       length: digits,
+      algorithm: algorithm,
       isGoogle: isGoogle,
     );
     nextCode = OTP.generateHOTPCodeString(
       secret,
       counter + 1,
       length: digits,
+      algorithm: algorithm,
       isGoogle: isGoogle,
     );
   }
