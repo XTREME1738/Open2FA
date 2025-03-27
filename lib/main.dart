@@ -26,6 +26,7 @@ final themeUseDynamicProvider = StateProvider((ref) => true);
 final homeProvider = StateProvider<Widget>((ref) => Column());
 final usingAuthProvider = StateProvider((ref) => true);
 final useFlagSecureProvider = StateProvider((ref) => true);
+final vaultLockedProvider = StateProvider((ref) => true);
 
 class Open2FA extends ConsumerStatefulWidget {
   const Open2FA({super.key});
@@ -34,7 +35,9 @@ class Open2FA extends ConsumerStatefulWidget {
   ConsumerState<Open2FA> createState() => _Open2FAState();
 }
 
-class _Open2FAState extends ConsumerState<Open2FA> {
+class _Open2FAState extends ConsumerState<Open2FA> with WidgetsBindingObserver {
+  Completer<void> _cancelLock = Completer<void>();
+
   @override
   void reassemble() {
     () async {
@@ -49,8 +52,34 @@ class _Open2FAState extends ConsumerState<Open2FA> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    () async {
+      if (!await Crypto.isAuthRequired()) return;
+      if (state == AppLifecycleState.paused) {
+        final lockoutTime = await Prefs.getAutoLockTimeout();
+        if (lockoutTime == 0) {
+          ref.read(vaultLockedProvider.notifier).state = true;
+        } else if (lockoutTime > 0) {
+          final duration = Duration(minutes: lockoutTime);
+          bool cancelled = false;
+          _cancelLock = Completer<void>();
+          _cancelLock.future.then((_) => cancelled = true);
+          await Future.delayed(duration);
+          if (cancelled) return;
+          ref.read(vaultLockedProvider.notifier).state = true;
+        }
+      } else if (state == AppLifecycleState.resumed) {
+        if (!ref.read(vaultLockedProvider.notifier).state) return;
+        if (!_cancelLock.isCompleted) _cancelLock.complete();
+      }
+    }();
+    super.didChangeAppLifecycleState(state);
+  }
+
+  @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     () async {
       ref.read(usingAuthProvider.notifier).state =
           await Crypto.isAuthRequired();
@@ -74,6 +103,7 @@ class _Open2FAState extends ConsumerState<Open2FA> {
         } else {
           try {
             await Crypto.unlockVaultNoAuth();
+            ref.read(vaultLockedProvider.notifier).state = false;
             homeNotifier.state = VaultPage();
           } catch (e) {
             logger.e(t('error.failed_to_unlock_vault'), error: e);

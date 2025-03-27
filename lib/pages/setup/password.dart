@@ -196,7 +196,9 @@ class _SetupAuthPasswordPageState extends ConsumerState<SetupAuthPasswordPage> {
                     await Crypto.setupPasswordAuth(_passwordController.text);
                     await Crypto.setBiometricsEnabled(_bioAuthEnabled);
                     await Prefs.setSetupComplete(true);
+                    await Crypto.unlockVaultWithPassword(_passwordController.text);
                     ref.read(usingAuthProvider.notifier).state = true;
+                    ref.read(vaultLockedProvider.notifier).state = false;
                     if (mounted) {
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(

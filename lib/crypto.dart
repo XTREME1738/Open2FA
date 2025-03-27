@@ -1,11 +1,13 @@
 import 'dart:convert';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hashlib/hashlib.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:open2fa/database.dart';
 import 'package:open2fa/i18n.dart';
+import 'package:open2fa/pages/auth.dart';
 
 class Crypto {
   static SecretKey? _encryptionKey;
@@ -126,6 +128,15 @@ class Crypto {
     DatabaseManager.close();
   }
 
+  static fullLockVault(BuildContext context) {
+    lockVault();
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => const AuthPage(),
+      ),
+    );
+  }
+
   static Future<bool> areBiometricsEnabled() async {
     try {
       await checkBiometricsAvailable();
@@ -178,6 +189,7 @@ class Crypto {
     _encryptionKey = SecretKey(key);
     await DatabaseManager.connect();
     await DatabaseManager.setupEncryption(_encryptionKey!);
+
   }
 
   static Future unlockVaultWithPassword(String password) async {

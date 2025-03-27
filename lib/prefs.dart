@@ -71,7 +71,7 @@ class Prefs {
     useDynamicColour = value;
   }
 
-  static Future<int> getAutoLock() async {
+  static Future<int> getAutoLockTimeout() async {
     final prefs = SharedPreferencesAsync();
     if (!await Crypto.isAuthRequired()) {
       return -1;

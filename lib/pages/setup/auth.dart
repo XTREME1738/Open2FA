@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open2fa/crypto.dart';
 import 'package:open2fa/i18n.dart';
+import 'package:open2fa/main.dart';
 import 'package:open2fa/pages/vault.dart';
 import 'package:open2fa/pages/setup/password.dart';
 import 'package:open2fa/pages/setup/setup.dart';
@@ -104,9 +105,14 @@ class _SetupAuthPageState extends ConsumerState<SetupAuthPage> {
                   } else {
                     await Crypto.setupNoAuth();
                     await Prefs.setSetupComplete(true);
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => VaultPage()),
-                    );
+                    ref.read(vaultLockedProvider.notifier).state = false;
+                    if (mounted) {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => VaultPage(),
+                        ),
+                      );
+                    }
                   }
                 },
                 child: Icon(Icons.arrow_forward),

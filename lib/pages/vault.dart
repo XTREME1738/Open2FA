@@ -93,6 +93,17 @@ class _VaultPageState extends ConsumerState<VaultPage> {
   Widget build(BuildContext context) {
     final usingAuth = ref.watch(usingAuthProvider);
     final categories = ref.watch(categoryProvider);
+    final vaultLocked = ref.watch(vaultLockedProvider);
+    if (vaultLocked) {
+      Future.delayed(const Duration(milliseconds: 150), () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const AuthPage(),
+          ),
+        );
+      });
+      return const Scaffold();
+    }
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -135,16 +146,18 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                                 ],
                               ),
                               onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) {
-                                      return const SettingsPage();
-                                    },
-                                  ),
-                                ).then((value) {
-                                  updateAccounts();
-                                  setState(() {});
-                                });
+                                Navigator.of(context)
+                                    .push(
+                                      MaterialPageRoute(
+                                        builder: (context) {
+                                          return const SettingsPage();
+                                        },
+                                      ),
+                                    )
+                                    .then((value) {
+                                      updateAccounts();
+                                      setState(() {});
+                                    });
                               },
                             ),
                             if (usingAuth)
@@ -157,6 +170,8 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                                   ],
                                 ),
                                 onTap: () {
+                                  ref.read(vaultLockedProvider.notifier).state = true;
+                                  Crypto.lockVault();
                                   Navigator.of(context).pushReplacement(
                                     MaterialPageRoute(
                                       builder: (context) => AuthPage(),

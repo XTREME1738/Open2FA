@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
@@ -31,7 +33,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       _authEnabled = await Crypto.isAuthRequired();
       _biometricsEnabled = await Crypto.areBiometricsEnabled();
       ref.read(autoLockTimeoutProvider.notifier).state =
-          await Prefs.getAutoLock();
+          await Prefs.getAutoLockTimeout();
       setState(() {});
     }();
   }
@@ -132,18 +134,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 );
               },
             ),
-            SwitchListTile(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+            if (Platform.isAndroid)
+              SwitchListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                title: Text(t('settings.theme_material_you')),
+                subtitle: Text(t('settings.theme_material_you_desc')),
+                value: themeUseDynamic,
+                onChanged: (value) {
+                  ref.read(themeUseDynamicProvider.notifier).state = value;
+                  Prefs.setUseDynamicColour(value);
+                },
               ),
-              title: Text(t('settings.theme_material_you')),
-              subtitle: Text(t('settings.theme_material_you_desc')),
-              value: themeUseDynamic,
-              onChanged: (value) {
-                ref.read(themeUseDynamicProvider.notifier).state = value;
-                Prefs.setUseDynamicColour(value);
-              },
-            ),
             Divider(),
             if (_authEnabled) ...[
               ListTile(

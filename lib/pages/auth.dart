@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:open2fa/crypto.dart';
 import 'package:open2fa/i18n.dart';
+import 'package:open2fa/main.dart';
 import 'package:open2fa/pages/vault.dart';
 
-class AuthPage extends StatefulWidget {
+class AuthPage extends ConsumerStatefulWidget {
   const AuthPage({super.key});
 
   @override
-  State<AuthPage> createState() => _AuthPageState();
+  ConsumerState<AuthPage> createState() => _AuthPageState();
 }
 
-class _AuthPageState extends State<AuthPage> {
+class _AuthPageState extends ConsumerState<AuthPage> {
   bool _showPassword = false;
   bool _biometricsEnabled = false;
   bool _unlocking = false;
@@ -91,6 +93,9 @@ class _AuthPageState extends State<AuthPage> {
                                   setState(() {});
                                   try {
                                     await Crypto.unlockVaultWithBiometrics();
+                                    ref
+                                        .read(vaultLockedProvider.notifier)
+                                        .state = false;
                                     if (mounted) {
                                       // ignore: use_build_context_synchronously
                                       Navigator.of(context).pushReplacement(
@@ -133,6 +138,7 @@ class _AuthPageState extends State<AuthPage> {
                     await Crypto.unlockVaultWithPassword(
                       _passwordController.text,
                     );
+                    ref.read(vaultLockedProvider.notifier).state = false;
                     if (mounted) {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (context) => VaultPage()),
