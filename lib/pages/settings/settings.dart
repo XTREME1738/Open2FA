@@ -348,11 +348,23 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              title: Text(t('settings.about.support')),
-              subtitle: Text(t('settings.about.support_desc')),
+              title: Text(t('settings.about.bmc')),
+              subtitle: Text(t('settings.about.bmc_desc')),
               trailing: Icon(Icons.open_in_new),
               onTap: () {
                 final url = 'https://www.buymeacoffee.com/xtremedev';
+                launchUrlString(url);
+              },
+            ),
+            ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              title: Text(t('settings.about.lp')),
+              subtitle: Text(t('settings.about.lp_desc')),
+              trailing: Icon(Icons.open_in_new),
+              onTap: () {
+                final url = 'https://www.liberapay.com/XTREME';
                 launchUrlString(url);
               },
             ),

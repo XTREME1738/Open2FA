@@ -168,6 +168,8 @@
 	"settings.about.fdroid_desc": "View the app page on F-Droid",
 	"settings.about.gplay": "Google Play Store",
 	"settings.about.gplay_desc": "View the app page on the t${settings.about.gplay}",
-	"settings.about.support": "Support me",
-	"settings.about.support_desc": "Support me on Buy Me a Coffee"
+	"settings.about.bmc": "Buy Me a Coffee",
+	"settings.about.bmc_desc": "Support me on t${settings.about.bmc}",
+	"settings.about.lp": "Liberapay",
+	"settings.about.lp_desc": "Support me on t${settings.about.lp}"
 }
