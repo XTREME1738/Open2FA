@@ -128,15 +128,6 @@ class Crypto {
     DatabaseManager.close();
   }
 
-  static fullLockVault(BuildContext context) {
-    lockVault();
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => const AuthPage(),
-      ),
-    );
-  }
-
   static Future<bool> areBiometricsEnabled() async {
     try {
       await checkBiometricsAvailable();

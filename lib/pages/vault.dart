@@ -102,7 +102,6 @@ class _VaultPageState extends ConsumerState<VaultPage> {
           ),
         );
       });
-      return const Scaffold();
     }
     return Scaffold(
       appBar: AppBar(
@@ -170,13 +169,8 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                                   ],
                                 ),
                                 onTap: () {
-                                  ref.read(vaultLockedProvider.notifier).state = true;
                                   Crypto.lockVault();
-                                  Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(
-                                      builder: (context) => AuthPage(),
-                                    ),
-                                  );
+                                  ref.read(vaultLockedProvider.notifier).state = true;
                                 },
                               ),
                           ];
