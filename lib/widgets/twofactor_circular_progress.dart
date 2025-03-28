@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:open2fa/main.dart';
 import 'package:otp/otp.dart';
 
 class TwoFactorCircularProgressIndicator extends StatefulWidget {
