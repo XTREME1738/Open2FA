@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:open2fa/main.dart';
+import 'package:otp/otp.dart';
 
 class TwoFactorCircularProgressIndicator extends StatefulWidget {
   const TwoFactorCircularProgressIndicator({
@@ -31,10 +33,6 @@ class _TwoFactorCircularProgressIndicatorState
     _syncController();
 
     _controller.addListener(() {
-      if (_controller.value > 0.992) {
-        // Keep the controllers in sync and prevent them from falling out of sync
-        _syncController();
-      }
       if (lastValue > 0.99 && _controller.value < 0.01) {
         widget.onRestart();
       }
@@ -44,10 +42,15 @@ class _TwoFactorCircularProgressIndicatorState
 
   void _syncController() {
     final interval = widget.interval;
-    final initialSeconds = DateTime.now().second % interval;
-    final initialProgress = initialSeconds / interval;
-    final initialProgressRounded = (initialProgress * 100).round() / 100;
-    _controller.forward(from: initialProgressRounded);
+    final remaining = OTP.remainingSeconds(interval: interval);
+    final progress = 1 - (remaining / interval);
+
+    _controller
+      ..stop()
+      ..reset()
+      ..forward(from: progress)
+      ..repeat();
+      setState(() {});
   }
 
   @override
